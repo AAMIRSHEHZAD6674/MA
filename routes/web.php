@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,8 +33,10 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 Route::resource('users', UserController::class);
 
-Route::post('/save-form', [FormController::class, 'store'])->name('form.store');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+Route::get('/school-report', [ReportController::class, 'showForm'])->name('school_report');
+Route::post('/school-report', [ReportController::class, 'fetchInspections'])->name('school.report.fetch');
+
 
 
 

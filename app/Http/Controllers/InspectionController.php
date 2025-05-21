@@ -98,8 +98,25 @@ class InspectionController extends Controller
             $tehsils   = Tehsil::all();
             $union_council = UnionCouncil::all();
 
+            $targets = $user->targets
+                ->filter(function ($target) {
+                    return $target->status === 'active';
+                })
+                ->map(function ($target) use ($user) {
+                    $achieved = Inspection::where('user_id', $user->id)
+                        ->count();
+
+                    $target->achieved = $achieved;
+                    $target->remaining = max($target->target_assign - $achieved, 0);
+
+                    return $target;
+                });
+
+
+
+
             // Return the token in the response
-            return response()->json(['token' => $token,'user_id'=>$user->id,'data'=>['error'=>'false','message'=>'Successfully Login','districts'=>$districts,'tehsils'=>$tehsils,'union_council'=>$union_council]]);
+            return response()->json(['token' => $token,'user_id'=>$user->id,'district_id'=>$user->district_id,'targets'=>$targets,'data'=>['error'=>'false','message'=>'Successfully Login']]);
         }
 
         // If authentication fails
