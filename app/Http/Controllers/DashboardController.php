@@ -13,64 +13,25 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Get user ID from query string for filtering (optional)
         $userId = $request->query('user_id');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
 
         $user = null;
-        $inspections = collect(); // fallback empty collection
-        $targets = collect();     // fallback empty collection
 
-        if ($userId) {
-            // Fetch specific user with targets
-            $user = User::with('targets')->find($userId);
+        // Filtered inspections
+        $inspections = Inspection::query()
+            ->when($userId, fn($q) => $q->where('user_id', $userId))
+            ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
+            ->get();
 
-            if (!$user) {
-                return redirect()->route('dashboard')->with('error', 'User not found');
-            }
-
-            // Fetch inspections only for this user
-            $inspections = Inspection::where('user_id', $userId)->get();
-
-            // Process targets with achieved count
-            $targetsQuery = Target::query();
-            if ($userId) {
-                $targetsQuery->where('user_id', $userId);
-            }
-            $targets = $targetsQuery->get();
-
-            // All users list for dropdown
-            $users = User::all();
-            $user = User::with('targets')->findOrFail($userId);
-
-            $targets = $user->targets->map(function ($target) use ($user) {
-                $achieved = Inspection::where('user_id', $user->id)
-                    ->whereDate('created_at', '>=', $target->start_date)
-                    ->whereDate('created_at', '<=', $target->end_date)
-                    ->count();
-
-                $target->achieved = $achieved;
-                $target->remaining = max($target->target_assign - $achieved, 0);
-
-                return $target;
-            });
-
-        } else {
-            // For admin view, fetch all inspections and targets
-            $inspections = Inspection::all();
-            $targets = Target::all();
-        }
-
-        // Aggregated data for charts
-        $totalInspections = $inspections->count();
-        $openSchools = $inspections->where('school_status', 'open')->count();
-        $closedSchools = $inspections->where('school_status', 'close')->count();
-
-        // Staff attendance status summary
+        // Staff attendance summary
         $staffAttendances = DB::table('staff_attendance')
             ->join('inspections', 'staff_attendance.inspection_id', '=', 'inspections.id')
-            ->when($userId, function ($query) use ($userId) {
-                return $query->where('inspections.user_id', $userId);
-            })
+            ->when($userId, fn($q) => $q->where('inspections.user_id', $userId))
+            ->when($startDate, fn($q) => $q->whereDate('inspections.created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('inspections.created_at', '<=', $endDate))
             ->select('status', DB::raw('count(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status')
@@ -79,11 +40,11 @@ class DashboardController extends Controller
         $staffAttendances = array_merge(['present' => 0, 'absent' => 0], $staffAttendances);
 
         // Student attendance summary
-        $studentData = (array) DB::table('student_attendance')
+        $studentData = (array)DB::table('student_attendance')
             ->join('inspections', 'student_attendance.inspection_id', '=', 'inspections.id')
-            ->when($userId, function ($query) use ($userId) {
-                return $query->where('inspections.user_id', $userId);
-            })
+            ->when($userId, fn($q) => $q->where('inspections.user_id', $userId))
+            ->when($startDate, fn($q) => $q->whereDate('inspections.created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('inspections.created_at', '<=', $endDate))
             ->select(DB::raw('SUM(enrollment) as total_enrollment'), DB::raw('SUM(absent) as total_absent'))
             ->first();
 
@@ -92,13 +53,53 @@ class DashboardController extends Controller
             'total_absent' => $studentData['total_absent'] ?? 0,
         ];
 
-        // All users list for dropdown
-        $users = User::all();
+        // Targets and achievements
+        if ($userId) {
+            $user = User::with('targets')->findOrFail($userId);
 
-        // Locations with coordinates for map view
-        $inspection_map = Inspection::whereNotNull('latitude')
+            $targets = $user->targets->map(function ($target) use ($user, $startDate, $endDate) {
+                $query = Inspection::where('user_id', $user->id)
+                    ->whereDate('created_at', '>=', $target->start_date)
+                    ->whereDate('created_at', '<=', $target->end_date);
+
+                if ($startDate) $query->whereDate('created_at', '>=', $startDate);
+                if ($endDate) $query->whereDate('created_at', '<=', $endDate);
+
+                $achieved = $query->count();
+                $target->achieved = $achieved;
+                $target->remaining = max($target->target_assign - $achieved, 0);
+
+                return $target;
+            });
+        } else {
+            $targets = Target::with('user')->get()->map(function ($target) use ($startDate, $endDate) {
+                $query = Inspection::where('user_id', $target->user_id)
+                    ->whereDate('created_at', '>=', $target->start_date)
+                    ->whereDate('created_at', '<=', $target->end_date);
+
+                if ($startDate) $query->whereDate('created_at', '>=', $startDate);
+                if ($endDate) $query->whereDate('created_at', '<=', $endDate);
+
+                $achieved = $query->count();
+                $target->achieved = $achieved;
+                $target->remaining = max($target->target_assign - $achieved, 0);
+
+                return $target;
+            });
+        }
+
+        $inspection_map = Inspection::query()
+            ->whereNotNull('latitude')
             ->whereNotNull('longitude')
+            ->when($userId, fn($q) => $q->where('user_id', $userId))
+            ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
             ->get(['id', 'school_code', 'latitude', 'longitude']);
+
+        $totalInspections = $inspections->count();
+        $openSchools = $inspections->where('school_status', 'open')->count();
+        $closedSchools = $inspections->where('school_status', 'close')->count();
+        $users = User::all();
 
         return view('dashboard', compact(
             'totalInspections',
@@ -112,5 +113,6 @@ class DashboardController extends Controller
             'inspection_map'
         ));
     }
+
 
 }

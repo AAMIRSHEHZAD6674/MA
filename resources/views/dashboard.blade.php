@@ -11,12 +11,13 @@
         <!-- User Filter -->
 
         <div class="w-full">
-            <div class="grid grid-cols-3 gap-4">
-                <div class="text-black p-6 rounded shadow text-center">
-                    <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap items-center gap-4">
-                        <label for="user_id" class="font-semibold text-gray-700">Filter by User:</label>
+            <div class="bg-white text-black p-6 rounded shadow">
+                <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap items-center gap-4">
+                    <!-- User Filter -->
+                    <div class="flex flex-col">
+                        <label for="user_id" class="font-semibold text-gray-700 mb-1">User:</label>
                         <select name="user_id" id="user_id"
-                                class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                class="border border-gray-300 rounded px-3 py-2 w-52 focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="">-- All Users --</option>
                             @foreach($users as $u)
                                 <option value="{{ $u->id }}" @if($user && $user->id == $u->id) selected @endif>
@@ -24,17 +25,26 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+
+                    <!-- Start Date -->
+
+                    <!-- Buttons -->
+                    <div class="flex items-end gap-2 mt-4 sm:mt-0">
                         <button type="submit"
                                 class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">
                             Filter
                         </button>
-                        @if($user)
-                            <a href="{{ route('dashboard') }}" class="text-red-600 underline">Clear Filter</a>
+
+                        @if($user || request('start_date') || request('end_date'))
+                            <a href="{{ route('dashboard') }}" class="text-red-600 underline">Clear</a>
                         @endif
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
+
+
 
         @if(session('error'))
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">

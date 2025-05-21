@@ -1,3 +1,8 @@
+@extends('layouts.admin')
+
+@section('title', 'Inspection Dashboard')
+
+@section('content')
 <x-app-layout>
     <x-slot name="header">Edit User</x-slot>
 
@@ -64,3 +69,4 @@
         </form>
     </div>
 </x-app-layout>
+@endsection
