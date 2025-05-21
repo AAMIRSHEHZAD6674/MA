@@ -111,12 +111,84 @@ class InspectionController extends Controller
 
                     return $target;
                 });
+            $api = [
+                [
+                    'school_code' => 'SCH001',
+                    'district_name' => 'Lahore',
+                    'union_council_name' => 'UC Lahore 1',
+                    'school_address' => '123 Main Street, Lahore',
+                    'tehsil_name' => 'Lahore City',
+                ],
+                [
+                    'school_code' => 'SCH002',
+                    'district_name' => 'Faisalabad',
+                    'union_council_name' => 'UC Faisalabad 5',
+                    'school_address' => '45 Millat Town, Faisalabad',
+                    'tehsil_name' => 'Faisalabad Saddar',
+                ],
+                [
+                    'school_code' => 'SCH003',
+                    'district_name' => 'Multan',
+                    'union_council_name' => 'UC Multan 3',
+                    'school_address' => '78 Gulgasht Colony, Multan',
+                    'tehsil_name' => 'Multan City',
+                ],
+                [
+                    'school_code' => 'SCH004',
+                    'district_name' => 'Rawalpindi',
+                    'union_council_name' => 'UC Rawalpindi 7',
+                    'school_address' => '22 Satellite Town, Rawalpindi',
+                    'tehsil_name' => 'Rawalpindi City',
+                ],
+                [
+                    'school_code' => 'SCH005',
+                    'district_name' => 'Gujranwala',
+                    'union_council_name' => 'UC Gujranwala 2',
+                    'school_address' => '11 Civil Lines, Gujranwala',
+                    'tehsil_name' => 'Gujranwala City',
+                ],
+                [
+                    'school_code' => 'SCH006',
+                    'district_name' => 'Sialkot',
+                    'union_council_name' => 'UC Sialkot 4',
+                    'school_address' => '90 Paris Road, Sialkot',
+                    'tehsil_name' => 'Sialkot Tehsil',
+                ],
+                [
+                    'school_code' => 'SCH007',
+                    'district_name' => 'Bahawalpur',
+                    'union_council_name' => 'UC Bahawalpur 1',
+                    'school_address' => '55 Model Town A, Bahawalpur',
+                    'tehsil_name' => 'Bahawalpur City',
+                ],
+                [
+                    'school_code' => 'SCH008',
+                    'district_name' => 'Sargodha',
+                    'union_council_name' => 'UC Sargodha 3',
+                    'school_address' => '301 Satellite Town, Sargodha',
+                    'tehsil_name' => 'Sargodha Tehsil',
+                ],
+                [
+                    'school_code' => 'SCH009',
+                    'district_name' => 'Rahim Yar Khan',
+                    'union_council_name' => 'UC RYK 2',
+                    'school_address' => '88 Gulshan-e-Iqbal, RYK',
+                    'tehsil_name' => 'RYK City',
+                ],
+                [
+                    'school_code' => 'SCH010',
+                    'district_name' => 'Dera Ghazi Khan',
+                    'union_council_name' => 'UC DG Khan 6',
+                    'school_address' => '123 College Road, DG Khan',
+                    'tehsil_name' => 'DG Khan Tehsil',
+                ],
+            ];
 
 
 
 
             // Return the token in the response
-            return response()->json(['token' => $token,'user_id'=>$user->id,'district_id'=>$user->district_id,'targets'=>$targets,'data'=>['error'=>'false','message'=>'Successfully Login']]);
+            return response()->json(['token' => $token,'user_id'=>$user->id,'district_id'=>$user->district_id,'targets'=>$targets,'api_data'=>$api,'data'=>['error'=>'false','message'=>'Successfully Login']]);
         }
 
         // If authentication fails
