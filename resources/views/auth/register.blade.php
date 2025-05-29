@@ -1,4 +1,5 @@
 <x-guest-layout>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
@@ -21,22 +22,32 @@
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                 <option value="">Select a role</option>
                 <option value="admin">Admin</option>
-                <option value="deo">DEO</option>
+                <option value="deo">DEO/DDEO</option>
+                <option value="sdeo">SDEO</option>
+                <option value="asdeo">ASDEO</option>
                 <!-- Add more roles as needed -->
             </select>
         </div>
 
         <!-- District Dropdown -->
         <div>
-            <label for="district_id" class="block text-sm font-medium text-gray-700">District</label>
-            <select name="district_id" id="district_id" required
+            <label for="office_id" class="block text-sm font-medium text-gray-700">Offices</label>
+            <select name="office_id" id="office_id" required
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                <option value="">Select District</option>
-                @foreach($districts as $district)
-                    <option value="{{ $district->id }}">{{ $district->name }}</option>
+                <option value="">Select Offices</option>
+                @foreach($offices as $office)
+                    <option value="{{ $office->id }}">{{ $office->name }}</option>
                 @endforeach
             </select>
         </div>
+
+        <div id="tehsil-container" class="mt-4 hidden">
+            <label for="tehsil_id" class="block text-sm font-medium text-gray-700">Tehsils</label>
+            <select name="tehsil_id" id="tehsil_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                <option value="">Select Tehsil</option>
+            </select>
+        </div>
+
 
         <!-- Password -->
         <div class="mt-4">
@@ -74,4 +85,35 @@
             </x-primary-button>
         </div>
     </form>
+
+    <script>
+        $('#office_id').on('change', function () {
+            const officeId = $(this).val();
+
+            if (officeId) {
+                $.ajax({
+                    url: `/office/${officeId}/tehsils`,
+                    type: 'GET',
+                    success: function (data) {
+                        let tehsilSelect = $('#tehsil_id');
+                        tehsilSelect.empty();
+                        console.log("my data is " + data);
+                        tehsilSelect.append('<option value="">Select Tehsil</option>');
+                        data.forEach(tehsil => {
+                            tehsilSelect.append(`<option value="${tehsil.id}">${tehsil.name} - Tehsil= ${tehsil.ucs ?? ''} / Union Council = ${tehsil.union_councils ?? ''}</option>`);
+
+                        });
+                        $('#tehsil-container').removeClass('hidden');
+                    },
+                    error: function () {
+                        alert('Failed to fetch tehsils');
+                    }
+                });
+            } else {
+                $('#tehsil_id').empty().append('<option value="">Select Tehsil</option>');
+                $('#tehsil-container').addClass('hidden');
+            }
+        });
+    </script>
+
 </x-guest-layout>

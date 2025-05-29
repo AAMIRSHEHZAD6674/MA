@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Office;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
@@ -20,7 +21,8 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        $office = Office::all();
+        return view('auth.register',['offices'=>$office]);
     }
 
     /**
@@ -28,14 +30,16 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)//: RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'string'], // Add role validation
-            'district_id' => ['required'],
+            'office_id' => ['required'],
+            'tehsil_id' => ['required'],
+
         ]);
 
         $user = User::create([
@@ -43,9 +47,9 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role, // Save role to database
-            'district_id'=>$request->district_id,
+            'office_id'=>$request->office_id,
+            'tehsil_id'=>$request->tehsil_id,
         ]);
-
         event(new Registered($user));
 
         Auth::login($user);

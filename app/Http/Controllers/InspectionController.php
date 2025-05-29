@@ -6,10 +6,12 @@ use App\Models\District;
 use App\Models\Inspection;
 use App\Models\Tehsil;
 use App\Models\UnionCouncil;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
 
 class InspectionController extends Controller
 {
@@ -18,7 +20,7 @@ class InspectionController extends Controller
         // Validate main inspection data
         $validated = $request->validate([
             'school_code' => 'required|string|max:50',
-            'district_id' => 'required|exists:districts,id',
+            'office_id' => 'required|exists:offices,id',
             'user_id' => 'required|exists:users,id',
             'school_status' => 'required|in:open,close',
             'students_cleanliness' => 'required|boolean',
@@ -94,9 +96,36 @@ class InspectionController extends Controller
             $user = Auth::user();
             // Create a personal access token
             $token = $user->createToken('YourAppName')->plainTextToken;
-            $districts = District::all();
-            $tehsils   = Tehsil::all();
-            $union_council = UnionCouncil::all();
+             //$districts = District::all();
+//            $tehsils   = Tehsil::all();
+//            $union_council = UnionCouncil::all();
+            // step 01: get data from districts, tehsils and also get role from users
+            $users_data = User::with(['tehsil','office.district'])->findOrFail($user->id);
+            $district_name = strtolower($users_data->office->district->name);
+            $gender = strtolower($users_data->office->gender);
+            $tehsil = strtolower($users_data->tehsil->name);
+            if($users_data->role==='deo'){
+                $api_response=Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d='.$district_name.'&g='.$gender);
+
+            }elseif($users_data->role==='sdeo'){
+                $api_response=Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d='.$district_name.'&g='.$gender .'&t='.$tehsil);
+            }elseif($users_data->role==='asdeo'){
+                $api_response=Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d='.$district_name.'&g='.$gender .'&t='.$tehsil .'&co='.$district_name.'%20(M)');
+            }
+
+            // step 03:  now create template from the data
+            $api = json_decode($api_response, true);
+            $schools = collect($api['resultDesc'])->map(function ($item) {
+                return [
+                    'School_name' => $item['School_name'],
+                    'EMIS_CODE' => $item['EMIS_CODE'],
+                ];
+            });
+
+             $templateResponse = $this->template_for_app($schools);
+
+            // step 04: return template including data
+
 
             $targets = $user->targets
                 ->filter(function ($target) {
@@ -111,88 +140,208 @@ class InspectionController extends Controller
 
                     return $target;
                 });
-            $api = [
-                [
-                    'school_code' => 'SCH001',
-                    'district_name' => 'Lahore',
-                    'union_council_name' => 'UC Lahore 1',
-                    'school_address' => '123 Main Street, Lahore',
-                    'tehsil_name' => 'Lahore City',
-                ],
-                [
-                    'school_code' => 'SCH002',
-                    'district_name' => 'Faisalabad',
-                    'union_council_name' => 'UC Faisalabad 5',
-                    'school_address' => '45 Millat Town, Faisalabad',
-                    'tehsil_name' => 'Faisalabad Saddar',
-                ],
-                [
-                    'school_code' => 'SCH003',
-                    'district_name' => 'Multan',
-                    'union_council_name' => 'UC Multan 3',
-                    'school_address' => '78 Gulgasht Colony, Multan',
-                    'tehsil_name' => 'Multan City',
-                ],
-                [
-                    'school_code' => 'SCH004',
-                    'district_name' => 'Rawalpindi',
-                    'union_council_name' => 'UC Rawalpindi 7',
-                    'school_address' => '22 Satellite Town, Rawalpindi',
-                    'tehsil_name' => 'Rawalpindi City',
-                ],
-                [
-                    'school_code' => 'SCH005',
-                    'district_name' => 'Gujranwala',
-                    'union_council_name' => 'UC Gujranwala 2',
-                    'school_address' => '11 Civil Lines, Gujranwala',
-                    'tehsil_name' => 'Gujranwala City',
-                ],
-                [
-                    'school_code' => 'SCH006',
-                    'district_name' => 'Sialkot',
-                    'union_council_name' => 'UC Sialkot 4',
-                    'school_address' => '90 Paris Road, Sialkot',
-                    'tehsil_name' => 'Sialkot Tehsil',
-                ],
-                [
-                    'school_code' => 'SCH007',
-                    'district_name' => 'Bahawalpur',
-                    'union_council_name' => 'UC Bahawalpur 1',
-                    'school_address' => '55 Model Town A, Bahawalpur',
-                    'tehsil_name' => 'Bahawalpur City',
-                ],
-                [
-                    'school_code' => 'SCH008',
-                    'district_name' => 'Sargodha',
-                    'union_council_name' => 'UC Sargodha 3',
-                    'school_address' => '301 Satellite Town, Sargodha',
-                    'tehsil_name' => 'Sargodha Tehsil',
-                ],
-                [
-                    'school_code' => 'SCH009',
-                    'district_name' => 'Rahim Yar Khan',
-                    'union_council_name' => 'UC RYK 2',
-                    'school_address' => '88 Gulshan-e-Iqbal, RYK',
-                    'tehsil_name' => 'RYK City',
-                ],
-                [
-                    'school_code' => 'SCH010',
-                    'district_name' => 'Dera Ghazi Khan',
-                    'union_council_name' => 'UC DG Khan 6',
-                    'school_address' => '123 College Road, DG Khan',
-                    'tehsil_name' => 'DG Khan Tehsil',
-                ],
-            ];
-
-
-
-
             // Return the token in the response
-            return response()->json(['token' => $token,'user_id'=>$user->id,'district_id'=>$user->district_id,'targets'=>$targets,'api_data'=>$api,'data'=>['error'=>'false','message'=>'Successfully Login']]);
+            return response()->json(['token' => $token,'user_id'=>$user->id,'district_id'=>$user->office_id,'targets'=>$targets,'template'=>$templateResponse,'data'=>['error'=>'false','message'=>'Successfully Login']]);
         }
 
         // If authentication fails
         return response()->json(['data'=>['error'=>'true','message'=>'Unauthorized User']]);
     }
 
+    public function template_for_app($schools)
+    {
+
+        $template = [
+            "formId" => "school_inspection_form",
+            "formName" => "School Inspection Form",
+            "pages" => [
+                [
+                    "title" => "School Info",
+                    "fields" => [
+                        [
+                            "key" => "school_code",
+                            "type" => "dropdown",
+                            "label" => "School Code",
+                            "validation" => ["required" => true],
+                            "options"=> $schools
+                        ],
+                        [
+                            "key" => "district_id",
+                            "type" => "dropdown",
+                            "label" => "District",
+                            "validation" => ["required" => true],
+                            "dataSource" => "districts"
+                        ],
+                        [
+                            "key" => "user_id",
+                            "type" => "dropdown",
+                            "label" => "Inspector",
+                            "validation" => ["required" => true],
+                            "dataSource" => "users"
+                        ],
+                        [
+                            "key" => "school_status",
+                            "type" => "radio",
+                            "label" => "School Status",
+                            "options" => [
+                                ["display" => "Open", "value" => "open"],
+                                ["display" => "Close", "value" => "close"]
+                            ],
+                            "validation" => ["required" => true]
+                        ],
+                        [
+                            "key" => "students_cleanliness",
+                            "type" => "radio",
+                            "label" => "Students Cleanliness",
+                            "options" => [
+                                ["display" => "Yes", "value" => true],
+                                ["display" => "No", "value" => false]
+                            ],
+                            "validation" => ["required" => true]
+                        ],
+                        [
+                            "key" => "school_cleanliness",
+                            "type" => "radio",
+                            "label" => "School Cleanliness",
+                            "options" => [
+                                ["display" => "Yes", "value" => true],
+                                ["display" => "No", "value" => false]
+                            ],
+                            "validation" => ["required" => true]
+                        ],
+                        [
+                            "key" => "head_management_assessment",
+                            "type" => "text",
+                            "label" => "Head Management Assessment",
+                            "validation" => ["required" => false]
+                        ],
+                        [
+                            "key" => "teaching_learning_assessment",
+                            "type" => "text",
+                            "label" => "Teaching & Learning Assessment",
+                            "validation" => ["required" => false]
+                        ],
+                        [
+                            "key" => "attachments",
+                            "type" => "photo",
+                            "label" => "Attachments",
+                            "validation" => [
+                                "required" => false,
+                                "maxSizeInMB" => 5.0,
+                                "maxSizeMessage" => "File cannot exceed 5MB",
+                                "minCount" => 0,
+                                "maxCount" => 5,
+                                "allowedExtensions" => ["jpg", "jpeg", "png", "pdf"],
+                                "allowedExtensionsMessage" => "Only JPG, JPEG, PNG, PDF files are allowed"
+                            ]
+                        ],
+                        [
+                            "key" => "latitude",
+                            "type" => "text",
+                            "label" => "Latitude",
+                            "validation" => [
+                                "required" => false,
+                                "pattern" => "^-?([1-8]?\\d(\\.\\d+)?|90(\\.0+)?)\$",
+                                "inputType" => "number",
+                                "patternMessage" => "Enter a valid latitude (-90 to 90)"
+                            ]
+                        ],
+                        [
+                            "key" => "longitude",
+                            "type" => "text",
+                            "label" => "Longitude",
+                            "validation" => [
+                                "required" => false,
+                                "pattern" => "^-?(180(\\.0+)?|((1[0-7]\\d)|([1-9]?\\d))(\\.\\d+)?)\$",
+                                "inputType" => "number",
+                                "patternMessage" => "Enter a valid longitude (-180 to 180)"
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    "title" => "Staff Attendance",
+                    "fields" => [
+                        [
+                            "key" => "staff_attendances",
+                            "type" => "repeater",
+                            "label" => "Staff Attendances",
+                            "children" => [
+                                [
+                                    "key" => "name",
+                                    "type" => "text",
+                                    "label" => "Name",
+                                    "validation" => ["required" => true]
+                                ],
+                                [
+                                    "key" => "personal_number",
+                                    "type" => "text",
+                                    "label" => "Personal No.",
+                                    "validation" => ["required" => true]
+                                ],
+                                [
+                                    "key" => "cnic",
+                                    "type" => "text",
+                                    "label" => "CNIC",
+                                    "validation" => ["required" => true]
+                                ],
+                                [
+                                    "key" => "designation",
+                                    "type" => "text",
+                                    "label" => "Designation",
+                                    "validation" => ["required" => true]
+                                ],
+                                [
+                                    "key" => "status",
+                                    "type" => "radio",
+                                    "label" => "Status",
+                                    "options" => [
+                                        ["display" => "Present", "value" => "present"],
+                                        ["display" => "Absent", "value" => "absent"]
+                                    ],
+                                    "validation" => ["required" => true]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    "title" => "Student Attendance",
+                    "fields" => [
+                        [
+                            "key" => "student_attendances",
+                            "type" => "repeater",
+                            "label" => "Student Attendances",
+                            "children" => [
+                                [
+                                    "key" => "class",
+                                    "type" => "text",
+                                    "label" => "Class",
+                                    "validation" => ["required" => true]
+                                ],
+                                [
+                                    "key" => "enrollment",
+                                    "type" => "text",
+                                    "label" => "Enrollment",
+                                    "validation" => ["required" => true, "inputType" => "number"]
+                                ],
+                                [
+                                    "key" => "absent",
+                                    "type" => "text",
+                                    "label" => "Absent",
+                                    "validation" => ["required" => true, "inputType" => "number"]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        return response()->json($template);
+    }
+
+
 }
+
+

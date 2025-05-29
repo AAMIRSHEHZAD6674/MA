@@ -45,7 +45,6 @@
         </div>
 
 
-
         @if(session('error'))
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
                 {{ session('error') }}
@@ -61,11 +60,11 @@
                     <p class="text-4xl text-white font-semibold">{{ $totalInspections }}</p>
                 </div>
                 <div class="bg-green-500 text-white p-6 rounded shadow text-center">
-                    <h2 class="text-white font-bold mb-2">Total Inspections</h2>
+                    <h2 class="text-white font-bold mb-2">Open Schools</h2>
                     <p class="text-4xl text-white font-semibold">{{  $openSchools  }}</p>
                 </div>
                 <div class="bg-red-500 text-white p-6 rounded shadow text-center">
-                    <h2 class="text-white font-bold mb-2">Total Inspections</h2>
+                    <h2 class="text-white font-bold mb-2">Closed Schools</h2>
                     <p class="text-4xl text-white font-semibold">{{ $closedSchools }}</p>
                 </div>
             </div>
@@ -90,11 +89,53 @@
             <h3 class="text-lg font-semibold text-gray-700 mb-4">Inspection Map</h3>
             <div id="inspection-map" class="w-full rounded" style="height: 500px;"></div>
         </div>
+        <div class="container mx-auto px-4">
 
+            <h3 class="text-xl font-semibold my-4">District-wise Inspection Report</h3>
+            <table class="w-full table-auto border-collapse border border-gray-300">
+                <thead>
+                <tr>
+                    <th class="border border-gray-300 px-4 py-2">District</th>
+                    <th class="border border-gray-300 px-4 py-2">Total Inspections</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($districtWiseReport as $district)
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2">{{ $district->district->name ?? 'N/A' }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ $district->total_inspections }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+
+            <h3 class="text-xl font-semibold my-4">User-wise Inspection Report</h3>
+            <table class="w-full table-auto border-collapse border border-gray-300">
+                <thead>
+                <tr>
+                    <th class="border border-gray-300 px-4 py-2">User</th>
+                    <th class="border border-gray-300 px-4 py-2">Inspections Done</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($userWiseReport as $user)
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2">{{ $user->name }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ $user->inspections_count }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+
+            <!-- Add other reports similarly -->
+
+        </div>
         <!-- Targets Table -->
         <div class="bg-white rounded-lg shadow-md p-6 border mb-10">
             <h3 class="text-lg font-semibold text-gray-700 mb-4">
-                Targets @if($user) for {{ $user->name }} @endif
+                Targets @if($user)
+                    for {{ $user->name }}
+                @endif
             </h3>
 
             @if($targets->count())

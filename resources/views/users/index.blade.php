@@ -26,6 +26,9 @@
                 <th class="px-4 py-2">Name</th>
                 <th class="px-4 py-2">Email</th>
                 <th class="px-4 py-2">Role</th>
+                <th class="px-4 py-2">District</th>
+                <th class="px-4 py-2">Tehsil</th>
+                <th class="px-4 py-2">Union Council</th>
                 <th class="px-4 py-2">Actions</th>
             </tr>
             </thead>
@@ -35,6 +38,9 @@
                     <td class="px-4 py-2">{{ $user->name }}</td>
                     <td class="px-4 py-2">{{ $user->email }}</td>
                     <td class="px-4 py-2">{{ $user->role }}</td>
+                    <td class="px-4 py-2">{{ $user->tehsil->district->name ?? 'N/A' }}</td>
+                    <td class="px-4 py-2">{{ $user->tehsil->name?? 'N/A' }}</td>
+                    <td class="px-4 py-2">{{ $user->tehsil->union_councils ?? 'N/A' }}</td>
                     <td class="px-4 py-2 space-x-2">
                         <!-- Edit Button -->
                         <a href="{{ route('users.edit', $user) }}" class="text-blue-500 hover:underline">Edit</a>

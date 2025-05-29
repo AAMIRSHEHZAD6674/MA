@@ -11,13 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('union_councils', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tehsil_id')
-                ->constrained()->cascadeOnDelete()
-                ->cascadeOnUpdate();
-            $table->string('name','127')->unique();
-            $table->timestamps();
+        Schema::table('tehsils', function (Blueprint $table) {
+            $table->string('ucs')->nullable()->after('name');
+            $table->string('union_councils')->nullable()->after('ucs');
         });
     }
 
@@ -26,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('union_councils');
+        Schema::table('tehsils', function (Blueprint $table) {
+            $table->dropColumn(['ucs', 'union_councils']);
+        });
     }
 };

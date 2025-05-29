@@ -17,7 +17,7 @@ class Inspection extends Model
         'students_cleanliness',
         'school_cleanliness',
         'attachments',
-        'district_id',
+        'office_id',
         'user_id',
         'head_management_assessment',
         'teaching_learning_assessment',
@@ -51,5 +51,10 @@ class Inspection extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function office(): BelongsTo
+    {
+        return $this->belongsTo(Office::class);
     }
 }

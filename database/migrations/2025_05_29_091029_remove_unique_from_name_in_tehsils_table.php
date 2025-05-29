@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('districts', function (Blueprint $table) {
-            $table->id();
-            $table->string('name','127')->unique();
-            $table->timestamps();
+        Schema::table('tehsils', function (Blueprint $table) {
+            $table->dropUnique('tehsils_name_unique');
         });
     }
 
@@ -23,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('districts');
+        Schema::table('tehsils', function (Blueprint $table) {
+            $table->unique('name');
+        });
     }
 };

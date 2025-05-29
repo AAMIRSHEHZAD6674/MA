@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -23,7 +24,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'district_id',
+        'office_id',
+        'tehsil_id',
     ];
 
     /**
@@ -53,5 +55,15 @@ class User extends Authenticatable
     public function targets(): HasMany
     {
         return $this->hasMany(Target::class);
+    }
+
+    public function office(): BelongsTo
+    {
+        return $this->belongsTo(Office::class);
+    }
+
+    public function tehsil(): BelongsTo
+    {
+        return $this->belongsTo(Tehsil::class);
     }
 }
