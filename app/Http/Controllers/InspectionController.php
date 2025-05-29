@@ -27,7 +27,7 @@ class InspectionController extends Controller
             'school_cleanliness' => 'required|boolean',
             'head_management_assessment' => 'nullable|string',
             'teaching_learning_assessment' => 'nullable|string',
-            'attachments'=>'nullable',
+            'attachments'=>'image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'data'=>'nullable',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
@@ -50,6 +50,14 @@ class InspectionController extends Controller
         DB::beginTransaction();
 
         try {
+              // uploads attachments
+//            $uploadedImagePaths = [];
+//                if ($request->hasFile('attachments')) {
+//                foreach ($request->file('attachments') as $image) {
+//                    $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+//                    $path = $image->storeAs('public/uploads', $filename);
+//                    $uploadedImagePaths[] = $path;
+//                }
             // Create Inspection
             $inspection = Inspection::create($validated);
 
