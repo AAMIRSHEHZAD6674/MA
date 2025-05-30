@@ -23,11 +23,16 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $roles = [ 'deo', 'sdeo', 'asdeo'];
+
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'name' => $this->faker->name,
+            'email' => $this->faker->unique()->safeEmail,
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => Hash::make('password'), // Default password
+            'role' => $this->faker->randomElement($roles),
+            'office_id' => \App\Models\Office::factory(), // assuming office relation
+            'tehsil_id' => \App\Models\Tehsil::factory(), // optional
             'remember_token' => Str::random(10),
         ];
     }
