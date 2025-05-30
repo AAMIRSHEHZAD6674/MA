@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::table('inspections', function (Blueprint $table) {
             // First drop foreign key constraints
             $table->dropForeign(['tehsil_id']);
-            $table->dropForeign(['union_council_id']);
         });
 
         Schema::table('inspections', function (Blueprint $table) {
@@ -24,7 +23,6 @@ return new class extends Migration
                 'level',
                 'gender',
                 'tehsil_id',
-                'union_council_id',
             ]);
 
             // Add new columns
