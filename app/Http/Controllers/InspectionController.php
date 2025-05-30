@@ -27,8 +27,8 @@ class InspectionController extends Controller
             'school_cleanliness' => 'required|boolean',
             'head_management_assessment' => 'nullable|string',
             'teaching_learning_assessment' => 'nullable|string',
-            'attachments'=>'image|mimes:jpeg,png,jpg,gif,svg|max:5120',
-            'data'=>'nullable',
+            'attachments' => 'image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'data' => 'nullable',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
 
@@ -50,7 +50,7 @@ class InspectionController extends Controller
         DB::beginTransaction();
 
         try {
-              // uploads attachments
+            // uploads attachments
 //            $uploadedImagePaths = [];
 //                if ($request->hasFile('attachments')) {
 //                foreach ($request->file('attachments') as $image) {
@@ -94,7 +94,6 @@ class InspectionController extends Controller
             'email' => 'required|email',
             'password' => 'required|min:6',
         ]);
-
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
         }
@@ -103,21 +102,20 @@ class InspectionController extends Controller
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = Auth::user();
             $token = $user->createToken('YourAppName')->plainTextToken;
-            $users_data = User::with(['tehsil','office.district'])->findOrFail($user->id);
+            $users_data = User::with(['tehsil', 'office.district'])->findOrFail($user->id);
             $district_name = strtolower($users_data->office->district->name);
             $gender = strtolower($users_data->office->gender);
             $tehsil = strtolower($users_data->tehsil->name);
-            if($users_data->role==='deo'){
-                $api_response=Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d='.$district_name.'&g='.$gender);
+            if ($users_data->role === 'deo') {
+                $api_response = Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d=' . $district_name . '&g=' . $gender);
+            } elseif ($users_data->role === 'sdeo') {
+                $api_response = Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d=' . $district_name . '&g=' . $gender . '&t=' . $tehsil);
                 //return $api_response;
-            }elseif($users_data->role==='sdeo'){
-                $api_response=Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d='.$district_name.'&g='.$gender .'&t='.$tehsil);
-                //return $api_response;
-            }elseif($users_data->role==='asdeo'){
-                $api_response=Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d='.$district_name.'&g='.$gender .'&t='.$tehsil .'&co='.$district_name.'%20(M)');
+            } elseif ($users_data->role === 'asdeo') {
+                $api_response = Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d=' . $district_name . '&g=' . $gender . '&t=' . $tehsil . '&co=' . $district_name . '%20(M)');
                 //return $api_response;
             }
-
+            $api_data = $api_response->json();
             // step 03:  now create template from the data
 //            $api = json_decode($api_response, true);
 //            $schools = collect($api['resultDesc'])->map(function ($item) {
@@ -126,8 +124,7 @@ class InspectionController extends Controller
 //                    'EMIS_CODE' => $item['EMIS_CODE'],
 //                ];
 //            });
-
-             $templateResponse = $this->template_for_app();
+            $templateResponse = $this->template_for_app();
 
             // step 04: return template including data
 
@@ -146,11 +143,14 @@ class InspectionController extends Controller
                     return $target;
                 });
             // Return the token in the response
-            return response()->json(['token' => $token,'user_id'=>$user->id,'office'=>$user->office_id,'resultDesc'=>$api_response,'targets'=>$targets,'template'=>$templateResponse,'data'=>['error'=>'false','message'=>'Successfully Login']]);
+            return response()->json(['token' => $token, 'user_id' => $user->id,
+                'office' => $user->office_id, 'resultDesc' => $api_data,
+                'targets' => $targets, 'template' => $templateResponse,
+                'data' => ['error' => 'false', 'message' => 'Successfully Login']]);
         }
 
         // If authentication fails
-        return response()->json(['data'=>['error'=>'true','message'=>'Unauthorized User']]);
+        return response()->json(['data' => ['error' => 'true', 'message' => 'Unauthorized User']]);
     }
 
     public function template_for_app()
