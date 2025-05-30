@@ -102,35 +102,32 @@ class InspectionController extends Controller
         // Attempt to authenticate user
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = Auth::user();
-            // Create a personal access token
             $token = $user->createToken('YourAppName')->plainTextToken;
-             //$districts = District::all();
-//            $tehsils   = Tehsil::all();
-//            $union_council = UnionCouncil::all();
-            // step 01: get data from districts, tehsils and also get role from users
             $users_data = User::with(['tehsil','office.district'])->findOrFail($user->id);
             $district_name = strtolower($users_data->office->district->name);
             $gender = strtolower($users_data->office->gender);
             $tehsil = strtolower($users_data->tehsil->name);
             if($users_data->role==='deo'){
                 $api_response=Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d='.$district_name.'&g='.$gender);
-
+                //return $api_response;
             }elseif($users_data->role==='sdeo'){
                 $api_response=Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d='.$district_name.'&g='.$gender .'&t='.$tehsil);
+                //return $api_response;
             }elseif($users_data->role==='asdeo'){
                 $api_response=Http::get('http://175.107.63.44:81/pndservices/pnDServices.php?API=398dea8c6877432d4aa2d828f4bcb2fb&_f=GetSchoolDataForAdminVisits&d='.$district_name.'&g='.$gender .'&t='.$tehsil .'&co='.$district_name.'%20(M)');
+                //return $api_response;
             }
 
             // step 03:  now create template from the data
-            $api = json_decode($api_response, true);
-            $schools = collect($api['resultDesc'])->map(function ($item) {
-                return [
-                    'School_name' => $item['School_name'],
-                    'EMIS_CODE' => $item['EMIS_CODE'],
-                ];
-            });
+//            $api = json_decode($api_response, true);
+//            $schools = collect($api['resultDesc'])->map(function ($item) {
+//                return [
+//                    'School_name' => $item['School_name'],
+//                    'EMIS_CODE' => $item['EMIS_CODE'],
+//                ];
+//            });
 
-             $templateResponse = $this->template_for_app($schools);
+             $templateResponse = $this->template_for_app();
 
             // step 04: return template including data
 
@@ -149,14 +146,14 @@ class InspectionController extends Controller
                     return $target;
                 });
             // Return the token in the response
-            return response()->json(['token' => $token,'user_id'=>$user->id,'district_id'=>$user->office_id,'targets'=>$targets,'template'=>$templateResponse,'data'=>['error'=>'false','message'=>'Successfully Login']]);
+            return response()->json(['token' => $token,'user_id'=>$user->id,'office'=>$user->office_id,'resultDesc'=>$api_response,'targets'=>$targets,'template'=>$templateResponse,'data'=>['error'=>'false','message'=>'Successfully Login']]);
         }
 
         // If authentication fails
         return response()->json(['data'=>['error'=>'true','message'=>'Unauthorized User']]);
     }
 
-    public function template_for_app($schools)
+    public function template_for_app()
     {
 
         $template = [
@@ -171,7 +168,6 @@ class InspectionController extends Controller
                             "type" => "dropdown",
                             "label" => "School Code",
                             "validation" => ["required" => true],
-                            "options"=> $schools
                         ],
                         [
                             "key" => "district_id",
