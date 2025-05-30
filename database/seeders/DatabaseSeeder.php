@@ -20,5 +20,6 @@ class DatabaseSeeder extends Seeder
         // ]);
         $this->call(OfficesTableSeeder::class);
         $this->call(DistrictsTableSeeder::class);
+        $this->call(TehsilsTableSeeder::class);
     }
 }
