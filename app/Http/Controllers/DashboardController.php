@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Inspection;
 use App\Models\Office;
-use App\Models\StaffAttendance;
 use App\Models\Target;
 use App\Models\Tehsil;
 use App\Models\User;
