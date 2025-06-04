@@ -52,6 +52,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(Inspection::class);
     }
+
     public function targets(): HasMany
     {
         return $this->hasMany(Target::class);
@@ -65,5 +66,15 @@ class User extends Authenticatable
     public function tehsil(): BelongsTo
     {
         return $this->belongsTo(Tehsil::class);
+    }
+
+    public function hasRole($role): bool
+    {
+        return $this->role === $role;
+    }
+
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles);
     }
 }
