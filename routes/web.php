@@ -39,6 +39,8 @@ Route::resource('targets', TargetController::class);
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 
 Route::get('/office/{office}/tehsils', [OfficeController::class, 'getTehsils']);
+Route::get('/get-offices-by-district', [OfficeController::class, 'getOfficesByDistrict'])->name('get.offices.by.district');
+
 
 Route::get('/reports/district', [ReportController::class, 'districtReport'])->name('reports.district');
 Route::get('/reports/user-wise', [ReportController::class, 'userWise'])->name('reports.user-wise');

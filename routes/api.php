@@ -24,6 +24,19 @@ Route::post('login', [InspectionController::class, 'login']);
 
 Route::post('/add',[InspectionController::class,'store']);
 
+Route::post('/upload', function(Request $request) {
+    if ($request->hasFile('file')) {
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+
+        $path = $file->storeAs('upload', $originalName, 'public');
+        return response()->json(['uploadedPath' => $path]);
+
+    }
+
+    return response()->json(['error' => 'No file uploaded'], 400);
+});
+
 
 
 

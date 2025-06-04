@@ -20,7 +20,8 @@ class UserController extends Controller
     public function create()
     {
         $office = Office::all();
-        return view('users.create', ['offices' => $office]);
+        $districts = District::all();
+        return view('users.create', ['offices' => $office,'districts'=>$districts]);
 
     }
 
@@ -51,6 +52,7 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $offices = Office::all();
+        $districts = District::all();
 
         // Preload tehsils if user has office selected
         $tehsils = [];
@@ -58,7 +60,7 @@ class UserController extends Controller
             $tehsils = Tehsil::where('district_id', $user->office->district_id)->get();
         }
 
-        return view('users.edit', compact('user', 'offices', 'tehsils'));
+        return view('users.edit', compact('user', 'offices', 'tehsils','districts'));
     }
 
     public function update(Request $request, $id)

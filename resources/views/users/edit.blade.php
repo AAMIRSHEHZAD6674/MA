@@ -40,28 +40,46 @@
                     </select>
                     @error('role') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
-
                 <div class="mb-4">
-                    <label for="office_id" class="block text-sm font-medium text-gray-700">Offices</label>
-                    <select name="office_id" id="office_id" required
+                    <label for="district_id" class="block text-sm font-medium text-gray-700">District</label>
+                    <select name="district_id" id="district_id" required
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                         <option value="">Select District</option>
-                        @foreach($offices as $office)
-                            <option value="{{ $office->id }}" {{ old('office_id', $user->office_id) == $office->id ? 'selected' : '' }}>
-                                {{ $office->name }}
+                        @foreach($districts as $district)
+                            <option value="{{ $district->id }}"
+                                {{ old('district_id', $user->office->district_id ?? '') == $district->id ? 'selected' : '' }}>
+                                {{ $district->name }}
                             </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="office_id" class="block text-sm font-medium text-gray-700">Office</label>
+                    <select name="office_id" id="office_id" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="">Select Office</option>
+                        @foreach($offices as $office)
+                            @if($office->district_id == old('district_id', $user->office->district_id ?? ''))
+                                <option value="{{ $office->id }}"
+                                    {{ old('office_id', $user->office_id) == $office->id ? 'selected' : '' }}>
+                                    {{ $office->name }}
+                                </option>
+                            @endif
                         @endforeach
                     </select>
                 </div>
 
                 <div id="tehsil-container" class="mt-4 {{ old('tehsil_id', $user->tehsil_id) ? '' : 'hidden' }}">
                     <label for="tehsil_id" class="block text-sm font-medium text-gray-700">Tehsils</label>
-                    <select name="tehsil_id" id="tehsil_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <select name="tehsil_id" id="tehsil_id"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                         <option value="">Select Tehsil</option>
                         @if($tehsils)
                             @foreach($tehsils as $tehsil)
-                                <option value="{{ $tehsil->id }}" {{ old('tehsil_id', $user->tehsil_id) == $tehsil->id ? 'selected' : '' }}>
-                                    Tehsil({{ $tehsil->ucs ?? '' }}) - Union Council({{ $tehsil->union_councils ?? '' }})
+                                <option
+                                    value="{{ $tehsil->id }}" {{ old('tehsil_id', $user->tehsil_id) == $tehsil->id ? 'selected' : '' }}>
+                                    Tehsil({{ $tehsil->ucs ?? '' }}) - Union Council({{ $tehsil->union_councils ?? '' }}
+                                    )
                                 </option>
                             @endforeach
                         @endif
@@ -69,14 +87,16 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password (leave blank to keep current)</label>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password (leave blank to keep
+                        current)</label>
                     <input id="password" name="password" type="password"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                     @error('password') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="mb-4">
-                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm
+                        Password</label>
                     <input id="password_confirmation" name="password_confirmation" type="password"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                 </div>
@@ -89,6 +109,30 @@
         </div>
 
         <script>
+            $('#district_id').on('change', function () {
+                var districtId = $(this).val();
+                $('#office_id').html('<option value="">Loading...</option>');
+                if (districtId) {
+                    $.ajax({
+                        url: '{{ route("get.offices.by.district") }}',
+                        type: 'GET',
+                        data: { district_id: districtId },
+                        success: function (data) {
+                            let options = '<option value="">Select Office</option>';
+                            data.forEach(function (office) {
+                                options += `<option value="${office.id}">${office.name}</option>`;
+                            });
+                            $('#office_id').html(options);
+                        },
+                        error: function () {
+                            $('#office_id').html('<option value="">Error loading offices</option>');
+                        }
+                    });
+                } else {
+                    $('#office_id').html('<option value="">Select Office</option>');
+                }
+            });
+
             function loadTehsils(officeId, selectedTehsilId = null) {
                 if (officeId) {
                     $.ajax({
