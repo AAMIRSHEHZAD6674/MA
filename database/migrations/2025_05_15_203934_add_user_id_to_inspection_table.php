@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('user_id')
                 ->after('teaching_learning_assessment')
                 ->constrained()
-                ->cascadeOnDelete();
+                ->onDelete('no action');
 
         });
     }

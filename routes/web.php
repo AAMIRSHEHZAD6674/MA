@@ -36,9 +36,10 @@ require __DIR__ . '/auth.php';
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('targets', TargetController::class);
-    Route::resource('users', UserController::class);
+    //Route::resource('users', UserController::class);
 
 });
+Route::resource('users', UserController::class);
 Route::middleware(['auth', 'role:deo,sdeo,asdeo,admin'])->group(function () {
     Route::get('reports/own', [ReportController::class, 'ownReports'])->name('reports.own');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
@@ -56,7 +57,8 @@ Route::middleware(['auth', 'role:deo,sdeo,asdeo,admin'])->group(function () {
 });
 
 
-
+Route::get('/get-offices-by-district', [OfficeController::class, 'getOfficesByDistrict'])->name('get.offices.by.district');
+Route::get('/office/{office}/tehsils', [OfficeController::class, 'getTehsils']);
 
 
 

@@ -20,8 +20,7 @@ return new class extends Migration
 
             // Foreign keys for location
             $table->foreignId('district_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('tehsil_id')->constrained()->cascadeOnDelete();
-
+            $table->foreignId('tehsil_id')->constrained('tehsils')->onDelete('no action');
             // School operational status
             $table->enum('school_status', ['open', 'close']);
 
